@@ -8,13 +8,24 @@ app = FastAPI()
 
 ######################## API Key from .env file
 API_KEY = os.getenv("API_KEY")
+print(f"API Key: {API_KEY}")  # Debugging: Check if it prints correctly
 
 ######################## Dependency to verify API Key
 def verify_api_key(request: Request):
-    api_key = request.headers.get("X-API-KEY") or request.query_params.get("api_key")
-    if api_key != f"Bearer {API_KEY}":
+    # Check for both 'api_key' and 'API_KEY' in the query parameters
+    api_key = request.query_params.get("api_key") or request.query_params.get("API_KEY")
+
+    if not api_key:  # Handle missing API key
+        raise HTTPException(status_code=401, detail="API Key is missing")
+
+    # Compare the API key with the one from the .env file
+    if api_key != API_KEY:  # Compare API key directly, no need for 'Bearer'
         raise HTTPException(status_code=401, detail="Invalid API Key")
+
     return api_key
+
+
+
 
 ######################## Common Task Handling Functionality
 def get_task_by_id(task_id: int, task_db: list):
